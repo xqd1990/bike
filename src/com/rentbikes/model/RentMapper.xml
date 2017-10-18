@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.bike.IRentDao">
+
+		<!-- 查询所有车点名 -->
+		<select id="getStationName" parameterType="java.util.Map" resultType="Bicycle_Station">
+			<![CDATA[
+				select * from  (select rownum rn,bs.* from bicycle_station bs where rownum<=#{end}) where rn>=#{start}
+			]]>
+		</select>
+		
+		<!-- 查询数据库数据条数 -->
+		<select id="getSize" resultType="int">
+				select count(station_id) from bicycle_station
+		</select>
+		
+		<!-- 点击车点名，遍历车点下可租车辆的信息 -->
+		<select id="getrentInfo" parameterType="int" resultType="RentTemp">	
+		select bicycle_station.station_name,temp.station_id,bicycle_info.bicycle_id,bicycle_info.bicycle_code,temp.pile_id,temp.pile_code from
+		        (select status,station_id,pile_id,pile_code,bicycle_id from 
+		        bicycle_pile)temp,
+		        bicycle_info，
+		        bicycle_station
+		        where temp.bicycle_id=bicycle_info.bicycle_id
+		        and bicycle_station.station_id=temp.station_id
+		        and temp.station_id=#{station_id}
+		        and temp.status=1
+				
+		</select>
+		
+		<select id="getreturnInfo" parameterType="String" resultType="RentTemp">
+			select	bs.station_name,bs.station_id,bp.pile_id,bp.pile_code
+				from 
+				bicycle_station bs,
+				bicycle_pile bp
+				where bs.station_id=bp.station_id
+				and bs.station_id=#{station_id}
+		</select>
+		
+		<!-- 校验车辆状态为3 -->
+		<select id="checkBicycle" parameterType="int" resultType="Bicycle_Info">
+					select  *      
+						from     
+						bicycle_info bici     where           
+	        		    bici.status=3 and bicycle_id=#{bicycle_id}
+					
+		</select>
+		
+		<select id="checkCardRent" parameterType="java.util.HashMap" resultType="int">
+				select count(*)isrent from bicycle_info where card_id=#{card_id} 
+		</select>
+	
+	
+		
+		<!--校验卡是否有效，校验卡中金额是否充足(>=200元)。 -->
+		<select id="checkCard" parameterType="String" resultType="Card" >
+		select  temp.card_id
+          from
+          (select * from card where card_code=#{card_code}) temp
+          where 
+	           temp.wallet_money>=200
+	          and temp.status=1
+	          and temp.zxbj=0
+		</select>
+		
+		<select id="checkCardID" parameterType="String" resultType="Card">
+			select * from card where card_code=#{card_code}
+		</select>
+		
+		<select id="isRent" parameterType="String" resultType="Bicycle_Info">
+			select * from bicycle_info where card_id=#{card_id}
+		</select>
+		
+		<select id="checkPile" parameterType="String" resultType="Bicycle_Pile">
+			select * from bicycle_pile where pile_id=#{pile_id}
+				and status=2
+		</select>
+		
+		<update id="modifyBicycle_Info" parameterType="RentTemp" >
+				update bicycle_info
+					set	status=2,
+					card_id=#{card_id}
+					where bicycle_id=#{bicycle_id}
+		</update>
+		
+		<update id="modifyBicycle_Pile" parameterType="RentTemp">
+				update bicycle_pile
+					set status=2,
+					bicycle_id=null
+					where pile_id=#{pile_id}
+		</update>
+		
+		<select id="selectFrozen_Money" parameterType="RentTemp" resultType="Card">
+				select * from card
+				where card_id=#{card_id}
+		</select>
+		
+		<update id="modifyTransfer_Money" parameterType="java.util.HashMap" >
+				update card
+				set frozen_money=200.00,
+				wallet_money=#{wallet_money}
+				where  card_id=#{card_id}
+		</update>
+		
+		<insert id="insertCard_Record" parameterType="java.util.HashMap">
+			<!-- 	create sequence id_card_record minvalue 1 maxvalue 99999 start with 10001 increment by 1 nocache; -->
+			<selectKey keyProperty="record_id" resultType="int" order="BEFORE">
+				select id_card_record.nextVal from dual
+			</selectKey>
+		<![CDATA[
+			insert into 
+			card_record 
+			(record_id,card_id,fee_type,chg_frozen_money,create_time,remark)	
+			values(id_card_record.nextVal,#{card_id},#{fee_type},#{chg_frozen_money},to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'),#{remark})
+		]]>
+		</insert>
+		
+		<insert id="insertBicycle_Record" parameterType="java.util.HashMap">
+			<!-- create sequence id_bicycle_record minvalue 1 maxvalue 99999 start with 10001 increment by 1 nocache -->
+			<selectKey >
+				select id_card_record.nextVal from dual
+			</selectKey>
+		
+			<![CDATA[
+				insert into 
+				bicycle_record
+				(record_id,bicycle_id,card_id,rent_time,rent_pile_id)
+				values(id_card_record.nextVal,#{bicycle_id},#{card_id},to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'),#{rent_pile_id})
+			]]>
+		</insert>
+		
+		
+		<select id="selectBicycle_Record"  parameterType="java.util.HashMap" resultType="RentTemp">
+	
+			select record_id,card_id from bicycle_record where rent_pile_id=#{rent_pile_id} and bicycle_id=#{bicycle_id} and card_id=#{card_id}
+		
+		</select>
+		
+		<insert id="insertBicycle_Deal" parameterType="java.util.HashMap">
+			<selectKey keyProperty="deal_id" resultType="int" order="BEFORE">
+				select id_bicycle_deal.nextVal from dual
+			</selectKey>
+			insert into
+			bicycle_deal
+			(deal_id,create_time,deal_name,deal_type,record_id,card_id,is_fee)
+			values(dealid.nextVal,to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'),'租出',2,#{record_id},#{card_id},0)
+		</insert>
+		
+		<select id="getCurrentTime" resultType="String">
+			select sysdate from dual
+			
+		</select>
+		
+		<select id="getCreateTime" parameterType="RentTemp" resultType="String">
+			select rent_time from bicycle_record  where card_id=#{card_id} and bicycle_id=#{bicycle_id} and rent_pile_id=#{pile_id}
+		</select>
+		
+		<select id="getCreateTimes" parameterType="RentTemp" resultType="String">
+			select rent_time from bicycle_record  where card_id=#{card_id} and bicycle_id=#{bicycle_id}
+		</select>
+		
+		
+		<select id="getRentTime" parameterType="java.util.HashMap" resultType="int">
+				 select round (to_number(TO_DATE(#{currenttime},'yyyy-mm-dd hh24:mi:ss')-TO_DATE(#{createTime},'yyyy-mm-dd hh24:mi:ss'))*24*60) as Hour 
+				from dual 
+		</select>
+		
+		<select id="getWalletMoney"  parameterType="int" resultType="double">
+				select wallet_money from card where card_id=#{card_id}
+		</select>
+		
+		<select id="selectBicycle_Info" parameterType="RentTemp" resultType="Bicycle_Info">
+				select * from bicycle_info where card_id=#{card_id}
+		</select>
+		
+		<update id="modifyBicycle_Record" parameterType="RentTemp" >
+				update bicycle_record
+				set return_time=#{currenttime},
+				return_pile_id=#{pile_id},
+				money=#{chg_money}
+				where bicycle_id=#{bicycle_id}
+				and card_id=#{card_id}		
+		</update>
+		
+		<select id="checkCard_Info_Record" parameterType="int" resultType="Card_Info_Record">
+					select * from card_info_record where  card_id=#{card_id}
+					
+		</select>
+		
+		<update id="modifyBicycle_PileReturn"  parameterType="RentTemp" >
+					update bicycle_pile
+					set status=1,
+					bicycle_id=#{bicycle_id}
+					where
+					pile_id=#{pile_id}
+		</update> 
+		<insert id="insertBicycle_DealReturn" parameterType="RentTemp">
+			insert into
+				bicycle_deal
+				(deal_id,create_time,deal_name,deal_type,record_id,card_id,is_fee,fee_type,chg_money)
+				values(dealid.nextVal,to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'),'还入',3,#{record_id},#{card_id},#{is_fee},1,#{chg_money})	
+		</insert>
+		<select id="selectRecord_id" parameterType="RentTemp" resultType="Bicycle_Record">
+			select * from bicycle_record where card_id=#{card_id} and bicycle_id=#{bicycle_id} 
+		
+		</select>
+		
+		<update id="modifyCard" parameterType="RentTemp" >
+		update card
+		set wallet_money=wallet_money-#{chg_money}
+		where card_id=#{card_id}
+		</update>
+		
+		<update id="deleteInfo" parameterType="RentTemp">
+			update  bicycle_info
+			set card_id=null,
+				status=3
+       			where card_id=#{card_id}
+		</update>
+		
+		<insert id="insertCard_RecordReturn" parameterType="RentTemp">
+		insert into card_record
+			(record_id,card_id,fee_type,chg_wallet_money,create_time,user_id)
+			values(id_card_record.nextVal,#{card_id},2,#{rentfee},to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'),#{user_id})
+		</insert>
+
+		
+</mapper>

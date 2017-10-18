@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.basicInfo.IBicycle_PileDao">
+	<update id="fixOut" parameterType="Bicycle_Info">
+		update bicycle_pile set status=2,bicycle_id=null where pile_id=#{pile_id}
+	</update>
+	<update id="fixIn" parameterType="Bicycle_Info">
+		update bicycle_pile set status=1,bicycle_id=#{bicycle_id} where pile_id=#{pile_id}
+	</update>
+	<select id="getFixBIPage" resultType="Bicycle_Pile" parameterType="java.util.Map">
+		<![CDATA[
+			select temp.pile_id,temp.pile_code,temp.status,temp.bicycle_id from (select rownum rn,bp.* from bicycle_pile bp where bp.station_id=#{station_id} order by bp.pile_id) temp where temp.rn>=#{start} and temp.rn<=#{end}
+		]]>
+	</select>
+	
+	<!-- 根据车点查询所有无车的车桩 -->
+	<select id="listByStationId" parameterType="int" resultType="Bicycle_Pile">
+		select temp.* from bicycle_pile temp where station_id=#{station_id} and status=2
+	</select>
+	
+	<!-- 改状态为 1：有车 -->
+	<update id="updateToFull" parameterType="Bicycle_Pile">
+		update bicycle_pile set status=1,bicycle_id=#{bicycle_id} where pile_id=#{pile_id}
+	</update>
+	
+	<!-- 根据车点查询所有车桩 -->
+	<select id="listAllByStationId" resultType="Bicycle_Pile" parameterType="int">
+		select temp.* from bicycle_pile temp where station_id=#{station_id}
+	</select>
+</mapper>

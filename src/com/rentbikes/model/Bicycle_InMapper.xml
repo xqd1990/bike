@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rentbikes.dao.bike.Bicycle_InDao">
+
+	<resultMap type="Bicycle_Station" id="bsmap1">
+		<id column="station_id" property="station_id"/>
+		<result column="station_code" property="station_code"/>
+		<result column="station_name" property="station_name"/>
+		<result column="longitude" property="longitude"/>
+		<result column="latitude" property="latitude"/>
+		<result column="bicycle_pile_num" property="bicycle_pile_num"/>
+		<result column="address" property="address"/>
+		<result column="person_in_charge" property="person_in_charge"/>
+		<result column="build_time" property="build_time"/>
+		<result column="run_time" property="run_time"/>
+		<result column="user_id" property="user_id"/>
+		<result column="create_time" property="create_time"/>
+		<result column="remark" property="remark"/>
+		<collection property="bicycle_pile" ofType="Bicycle_Pile" column="station_id" select="getplielist"></collection>
+	
+	</resultMap>
+
+
+	<select id="getpagenumallpoint" resultType="int">
+		select count(temp.station_id) from
+    	(select distinct(bs.station_id),bs.station_code,bs.station_name,bs.address,bs.bicycle_pile_num from bicycle_station bs ,bicycle_pile bp where bp.station_id=bs.station_id and bp.status=2 ) temp 
+	</select>
+
+	<select id="FindBicycleOfin" resultType="Bicycle_Info" parameterType="java.util.Map">
+		<![CDATA[
+		select temp.* from
+		(select bi.*,rownum rn from bicycle_info bi where bi.status=4) temp  where temp.rn>=#{start1} and temp.rn<#{end} 
+		]]>
+		<choose>
+			<when test="bicycle_id==0 and bicycle_code !=null">
+					 and temp.bicycle_code like #{bicycle_code}||'%'
+			</when>
+			<when test="bicycle_id!=0">
+					 and temp.bicycle_id like #{bicycle_id}||'%'
+			</when>
+		</choose>
+	</select>
+	
+	<select id="getpagenumall" resultType="int" parameterType="Bicycle_Info">
+			select count(bi.bicycle_id) from bicycle_info bi where bi.status=4
+			<choose>
+			<when test="bicycle_id==0 and bicycle_code !=null">
+					 and bi.bicycle_code like #{bicycle_code}||'%'
+			</when>
+			<when test="bicycle_id!=0">
+					 and bi.bicycle_id like #{bicycle_id}||'%'
+			</when>
+		</choose>
+			
+	</select>
+	<select id="getCanInbicyclePoint"  resultMap="bsmap1" parameterType="java.util.Map"> 
+		 <![CDATA[
+		    select distinct(temp.station_id),temp.station_code,temp.station_name,temp.longitude,temp.latitude,temp.bicycle_pile_num,temp.address,temp.person_in_charge,temp.build_time,
+            temp.run_time,temp.user_id,temp.create_time,temp.remark from
+    		(select distinct(bs.station_id),bs.station_code,bs.station_name,bs.longitude,bs.latitude,bs.bicycle_pile_num,bs.address,bs.person_in_charge,bs.build_time,
+            bs.run_time,bs.user_id,bs.create_time,
+            bs.remark,rownum rn from bicycle_station bs ,bicycle_pile bp where bp.station_id=bs.station_id and bp.status=2 ) temp 
+             where temp.rn>=#{start1} and temp.rn<#{end}
+		 ]]>
+	
+	</select>
+	
+	<select id="getplielist" resultType="Bicycle_Pile" parameterType="int">
+			select * from bicycle_pile bp where bp.station_id=#{station_id} and bp.status=2 
+			
+	</select>
+	
+	<select id="getBicyclestatus" parameterType="Bicycle_Info" resultType="Bicycle_Info">
+			select * from bicycle_info bi where bi.bicycle_id=#{bicycle_id} and bi.status=4 
+	</select>
+	
+	<select id="getBicycle_PileStatus" parameterType="Bicycle_Pile" resultType="Bicycle_Pile">
+			select * from bicycle_pile bp where bp.status=2 and bp.pile_id=#{pile_id}
+	</select>
+	
+	<update id="updateBicycleStatus" parameterType="Bicycle_Info">
+		update bicycle_info bi set bi.status=5,bi.operator_time=to_char(sysdate,'yyyy-mm-dd hh24:mi:ss') where bi.bicycle_id=#{bicycle_id}
+	</update>
+	
+	<update id="updateBicycleplie" parameterType="Bicycle_Pile">
+		update bicycle_pile bp set bp.status=1,bp.user_id=#{user_id},bp.operator_time=to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'),bp.bicycle_id=#{bicycle_id} where bp.pile_id=#{pile_id}
+	</update>
+	<update id="updateBicycleDeployMsg" parameterType="Bicycle_Deploy">
+			update BICYCLE_DEPLOY t set t.to_pile_id=#{to_pile_id},t.to_card_id=#{to_card_id},t.to_time=to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'),t.to_reason=5,t.remark=t.remark||'已经调入',t.status=0 where t.bicycle_id=#{bicycle_id} and t.status=1	
+	</update>
+	<select id="getIdforBicycleDeploy" parameterType="Bicycle_Deploy" resultType="int">
+		select t.deploy_id from BICYCLE_DEPLOY t where t.bicycle_id=#{bicycle_id} and t.status=1
+	</select>
+	
+	<insert id="insertBicycleDeal" parameterType="Bicycle_Deal">
+	<selectKey keyProperty="deal_id" resultType="int" order="BEFORE">
+		select dealid.nextval from dual
+	</selectKey>
+		insert into bicycle_deal values(#{deal_id},to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'),'普通调入',5,#{record_id},#{card_id},0,0,0,#{bicycle_id},#{pile_id},#{user_id})
+		
+	</insert>
+</mapper>

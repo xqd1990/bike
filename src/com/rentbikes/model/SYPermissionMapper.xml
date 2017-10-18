@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.basicInfo.SYPermissionDao">
+	<insert id="addPermission" parameterType="SYPermission">
+		<selectKey keyProperty="permissionId" resultType="int" order="BEFORE">
+			select permissionId.nextval from dual
+		</selectKey>
+		insert into sypermission(permissionId,roleId,phaseId) values(#{permissionId},#{roleId},#{phaseId})
+	</insert>
+	<delete id="deletePermission" parameterType="int">
+		delete from sypermission where roleId=#{roleId}
+	</delete>
+	<select id="listPermission" parameterType="int" resultType="SYPermission">
+		select * from sypermission where roleId=#{roleId}
+	</select>
+	<select id="isExist" parameterType="int" resultType="int">
+		select count(permissionId) from sypermission where phaseId=#{phaseId}
+	</select>
+</mapper>

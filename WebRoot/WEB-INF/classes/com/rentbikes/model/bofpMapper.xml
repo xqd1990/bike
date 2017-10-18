@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rentbikes.dao.bike.Bicycle_Out_Find_pointDao">
+
+	<update id="updatebicyclepile" parameterType="Bicycle_Pile">
+		update bicycle_pile bp set bp.status=2 where bp.pile_id=#{pile_id}
+	</update>
+
+	<update id="updatebucycleinfo" parameterType="Bicycle_Info">
+		update bicycle_info bi set bi.status=4,bi.operator_time=to_char(sysdate,'yyyy-mm-dd hh24:mi:ss') where bi.bicycle_id=#{bicycle_id}
+	</update>
+	
+	<insert id="insertbicycledploy" parameterType="Bicycle_Deploy">
+	<selectKey keyProperty="deploy_id" resultType="int" order="BEFORE">
+		select deployid.nextval from dual
+	</selectKey>
+		insert into bicycle_deploy(DEPLOY_ID,bicycle_id,from_pile_id,from_card_id,from_time,to_reason,from_reason,remark,status) values(#{deploy_id},#{bicycle_id},#{from_pile_id},#{from_card_id},to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'),4,4,'普通调出',1)
+	</insert>
+	
+	<insert id="insertbicycledeal" parameterType="Bicycle_Deal">
+	<selectKey keyProperty="deal_id" resultType="int" order="BEFORE">
+		select dealid.nextval from dual
+	</selectKey>
+		insert into bicycle_deal values(#{deal_id},to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'),'普通调出',4,#{record_id},#{card_id},0,0,0,#{bicycle_id},#{pile_id},#{user_id})
+		
+	</insert>
+	
+	<select id="getcardid" resultType="Card" parameterType="Card">
+		select * from card c where c.card_type=4 and c.card_code= #{card_code}
+	</select>
+
+
+	<select id="lookBicyclePile" resultType="Bicycle_Pile" parameterType="Bicycle_Pile">
+		select * from Bicycle_Pile bp where bp.status=1 and bp.station_id=#{station_id}
+	</select>
+	<select id="getpagenumall" resultType="int" >
+		select count(temp.station_id) from
+		(select distinct(bs.station_id),bs.station_code,bs.station_name,bs.address,bs.bicycle_pile_num from bicycle_station bs ,bicycle_pile bp where bp.station_id=bs.station_id and bp.status=1 ) temp 
+	</select>
+	<select id="getpagenum" resultType="int" parameterType="Bicycle_Station">
+		select count(temp.station_id) from
+		(select distinct(bs.station_id),bs.station_code,bs.station_name,bs.address,bs.bicycle_pile_num from bicycle_station bs ,bicycle_pile bp where bp.station_id=bs.station_id and bp.status=1 ) temp where 
+		<choose>
+			<when test="station_code !=null">
+				temp.station_code like #{station_code}||'%'
+			</when>
+			<when test="station_code == null and station_name !=null and address != null">
+				temp.station_name like #{station_name}||'%' or temp.address like #{address}||'%'
+			</when>
+			<when test="station_code == null and station_name !=null and address == null">
+				temp.station_name like #{station_name}||'%' 
+			</when>
+			<when test="station_code == null and station_name ==null and address != null">
+				temp.address like #{address}||'%'
+			</when>
+		</choose>
+	</select>
+	
+	<select id="findCanOutBikepoint" resultType="Bicycle_Station" parameterType="java.util.Map">
+			<![CDATA[
+			select distinct(temp.station_id),temp.station_code,temp.station_name,temp.longitude,temp.latitude,temp.bicycle_pile_num,temp.address,temp.person_in_charge,temp.build_time,temp.run_time,temp.user_id,temp.create_time,temp.remark from
+			(select distinct(bs.station_id),bs.station_code,bs.station_name,bs.longitude,bs.latitude,bs.bicycle_pile_num,bs.address,bs.person_in_charge,bs.build_time,bs.run_time,bs.user_id,bs.create_time,bs.remark,rownum rn from bicycle_station bs ,bicycle_pile bp where bp.station_id=bs.station_id and bp.status=1 ) temp
+			 where temp.rn>=#{start1} and temp.rn<#{end} and 
+			 ]]>
+			<choose>
+			<when test="station_code !=null">
+				temp.station_code like '%'||#{station_code}||'%'
+			</when>
+			<when test="station_code == null and station_name !=null and address != null">
+				(temp.station_name like '%'||#{station_name}||'%' or temp.address like '%'||#{address}||'%')
+			</when>
+			<when test="station_code == null and station_name !=null and address == null">
+				temp.station_name like '%'||#{station_name}||'%'
+			</when>
+			<when test="station_code == null and station_name ==null and address != null">
+				 temp.address like '%'||#{address}||'%'
+			</when>
+		</choose>
+	</select>
+	
+	<select id="allCanOutBikePoint" resultType="Bicycle_Station" parameterType="java.util.Map">
+		<![CDATA[
+			select distinct(temp.station_id),temp.station_code,temp.station_name,temp.longitude,temp.latitude,temp.bicycle_pile_num,temp.address,temp.person_in_charge,temp.build_time,temp.run_time,temp.user_id,temp.create_time,temp.remark from
+			(select distinct(bs.station_id),bs.station_code,bs.station_name,bs.longitude,bs.latitude,bs.bicycle_pile_num,bs.address,bs.person_in_charge,bs.build_time,bs.run_time,bs.user_id,bs.create_time,bs.remark,rownum rn from bicycle_station bs ,bicycle_pile bp where bp.station_id=bs.station_id and bp.status=1 ) temp
+			 where temp.rn>=#{start1} and temp.rn<#{end}
+		]]>
+	</select>
+	
+	
+</mapper>

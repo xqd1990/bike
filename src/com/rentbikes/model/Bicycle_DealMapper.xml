@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.bike.IBicycle_DealDao">
+	<insert id="fixOut" parameterType="Bicycle_Deal">
+		<selectKey keyProperty="deal_id" resultType="int" order="BEFORE">
+			select dealid.nextval from dual 
+		</selectKey>
+		insert into bicycle_deal(deal_id,create_time,deal_name,deal_type,record_id,is_fee,chg_money,bicycle_id,pile_id,user_id) values(#{deal_id},sysdate,'维修调出',6,#{record_id},0,0,#{bicycle_id},#{pile_id},#{user_id})
+	</insert>
+	<insert id="fixIn" parameterType="Bicycle_Deal">
+		<selectKey keyProperty="deal_id" resultType="int" order="BEFORE">
+			select dealid.nextval from dual 
+		</selectKey>
+		insert into bicycle_deal(deal_id,create_time,deal_name,deal_type,record_id,is_fee,chg_money,bicycle_id,pile_id,user_id) values(#{deal_id},sysdate,'维修调入',7,#{record_id},0,0,#{bicycle_id},#{pile_id},#{user_id})
+	</insert>
+	<insert id="addFixdeal" parameterType="Bicycle_Deal">
+		<selectKey keyProperty="deal_id" resultType="int" order="BEFORE">
+			select dealid.nextval from dual 
+		</selectKey>
+		insert into bicycle_deal(deal_id,create_time,deal_name,deal_type,record_id,is_fee,chg_money,bicycle_id,user_id) values(#{deal_id},#{create_time},'维修',8,#{record_id},1,#{chg_money},#{bicycle_id},#{user_id})
+	</insert>
+	
+	<!-- 新车购入的流水记录 -->
+	<insert id="addBuyBicycle" parameterType="Bicycle_Deal">
+		<selectKey keyProperty="deal_id" resultType="int" order="BEFORE">
+			select dealid.nextval from dual 
+		</selectKey>
+		insert into bicycle_deal(deal_id, create_time, deal_name, deal_type, record_id, is_fee, fee_type, chg_money, user_id)
+					     values(#{deal_id}, #{create_time}, '购入', 1, #{record_id}, 1, 2, #{chg_money}, #{user_id})
+	</insert>
+	
+	<!-- 新车入桩的流水记录 -->
+	<insert id="addForBicycleToPile" parameterType="Bicycle_Deal">
+		<selectKey keyProperty="deal_id" resultType="int" order="BEFORE">
+			select dealid.nextval from dual 
+		</selectKey>
+		insert into bicycle_deal(deal_id,
+                         create_time,
+                         deal_name,
+                         deal_type,
+                         record_id,
+                         is_fee,
+                         chg_money,
+                         bicycle_id,
+                         pile_id,
+                         user_id) 
+       					values(#{deal_id},#{create_time},'调入',5,#{record_id},0,0,#{bicycle_id},#{pile_id},#{user_id})
+					    
+	</insert>
+</mapper>

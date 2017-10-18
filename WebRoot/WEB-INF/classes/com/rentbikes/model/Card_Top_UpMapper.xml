@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.card.Card_Top_UpDao">
+	<select id="monthTopUponece" resultType="Card_Record" parameterType="Card_Record">
+	<![CDATA[
+		select * from card_record c where c.card_id=#{card_id} and c.create_time like #{create_time}||'%' and c.chg_monthly_money>0  
+	]]>
+	</select>
+	
+	<update id="cardTopUpcarddao" parameterType="Card">
+		update card c set c.monthly_money=c.monthly_money+#{monthly_money},c.wallet_money=c.wallet_money+#{wallet_money} where c.card_id=#{card_id}
+	</update>
+	
+	<insert id="cardTopUpcardrecorddao" parameterType="Card_Record">
+	<selectKey keyProperty="record_id" resultType="int" order="BEFORE">
+			select card_recordseq.nextval from dual
+	</selectKey>
+		insert into CARD_RECORD values(#{record_id},#{card_id},#{fee_type},#{chg_monthly_money},#{chg_wallet_money},#{frozen_money},to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'),#{user_id},#{remark},0)
+	</insert>
+	
+	<select id="getuserid" resultType="SYUser" parameterType="SYUser">
+		select * from SYUSER where USERNAME=#{username}
+	</select>
+</mapper>

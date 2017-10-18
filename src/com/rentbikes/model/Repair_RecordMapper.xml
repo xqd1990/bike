@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.bike.IRepair_RecordDao">
+	<insert id="addRecord" parameterType="Repair_Record">
+		<selectKey keyProperty="record_id" resultType="int" order="BEFORE">
+			select repairrecordid.nextval from dual 
+		</selectKey>
+		insert into repair_record(record_id,bicycle_id,repair_type,repair_part,repair_result,fee,repairer,repair_date,remark,user_id,operator_time) values(#{record_id},#{bicycle_id},#{repair_type},#{repair_part},#{repair_result},#{fee},#{repairer},#{repair_date},#{remark},#{user_id},sysdate)
+	</insert>
+</mapper>

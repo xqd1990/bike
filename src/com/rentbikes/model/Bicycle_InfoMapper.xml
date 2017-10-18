@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.basicInfo.IBicycle_InfoDao">
+	<!-- 修理调出 -->
+	<update id="fixOut" parameterType="Bicycle_Info">
+		update bicycle_info set status=5,pile_id=0,operator_time=sysdate,user_id=#{user_id} where bicycle_id=#{bicycle_id}
+	</update>
+	<!-- 修理调入 -->
+	<update id="fixIn" parameterType="Bicycle_Info">
+		update bicycle_info set status=3,pile_id=#{pile_id},operator_time=sysdate,user_id=#{user_id} where bicycle_id=#{bicycle_id}
+	</update>
+	<!-- 修理完成(不管成功还是失败） -->
+	<update id="recom" parameterType="Repair_Record">
+		update bicycle_info set status=7,operator_time=sysdate,user_id=#{user_id} where bicycle_id=#{bicycle_id}
+	</update>
+	<!-- 获得需要修理的自行车信息分页 -->
+	<select id="getFixPage" parameterType="java.util.Map" resultType="Bicycle_Info">
+		<![CDATA[
+		select temp.bicycle_id,temp.bicycle_code,temp.status from (select rownum rn,bi.* from bicycle_info bi where status=5 order by bi.bicycle_id) temp where temp.rn>=#{start} and temp.rn<=#{end}
+		]]>	
+	</select>
+	<select id="getFixSize" resultType="int">
+		select count(bicycle_id) from bicycle_info where status=5
+	</select>
+	<!-- 修理完成的且修理成功需要还入的自行车信息（分页） -->
+	<select id="getFixssPage" parameterType="java.util.Map" resultType="Bicycle_Info">
+		<![CDATA[
+		select temp.bicycle_id,temp.bicycle_code,temp.status from (select rownum rn,br.* from (select distinct(bi.bicycle_id),bi.bicycle_code,bi.status,bi.user_id from bicycle_info bi,repair_record rec where bi.status=7 and rec.bicycle_id=bi.bicycle_id and rec.repair_result=1 order by bi.bicycle_id) br) temp where temp.rn>=#{start} and temp.rn<=#{end}
+		]]>	
+	</select>
+	<select id="getFixssSize" resultType="int">
+		select count(temp.bicycle_id) from (select distinct(bi.bicycle_id),bi.bicycle_code,bi.status,bi.user_id from bicycle_info bi,repair_record rec where bi.status=7 and rec.bicycle_id=bi.bicycle_id and rec.repair_result=1 ) temp
+	</select>
+	<!-- 需要报废的自行车信息（分页） -->
+	<select id="getScrapPage" parameterType="java.util.Map" resultType="Bicycle_Info">
+		<![CDATA[
+		select temp.bicycle_id,temp.bicycle_code,temp.status from (select rownum rn,bi.* from bicycle_info bi,repair_record rec where bi.status=7 and rec.bicycle_id=bi.bicycle_id and rec.repair_result=2 order by bi.bicycle_id) temp where temp.rn>=#{start} and temp.rn<=#{end}
+		]]>	
+	</select>
+	<select id="getScrapSize" resultType="int">
+		select count(temp.bicycle_id) from (select rownum rn,bi.* from bicycle_info bi,repair_record rec where bi.status=7 and rec.bicycle_id=bi.bicycle_id and rec.repair_result=2 order by bi.bicycle_id) temp
+	</select>
+	<!-- 报废 -->
+	<update id="scrap" parameterType="Bicycle_Info">
+		update bicycle_info set status=6,destory_date=sysdate,operator_time=sysdate,user_id=#{user_id} where bicycle_id=#{bicycle_id}
+	</update>
+	
+	<!-- 新增车辆 -->
+	<insert id="addBicycle" parameterType="Bicycle_Info" >
+		<selectKey keyProperty="bicycle_id" resultType="int" order="BEFORE">
+			select bicycleId.nextval from dual
+		</selectKey>
+		insert into bicycle_info(bicycle_id,
+                         bicycle_code,
+                         status,
+                         user_id,
+                         operator_time,
+                         remark) values(#{bicycle_id},bicycleCode.nextval,'1',#{user_id},#{operator_time},'新增')
+	</insert>
+	
+	<!-- 查询待入桩的新车 -->
+	<select id="listToPile" parameterType="java.util.Map" resultType="Bicycle_Info">
+		select t.*, bc.catagory_name
+		from (select temp.*,rownum rn from bicycle_info temp where status=1 and <![CDATA[rownum<=#{end}]]>) t, bicycle_order_detail de,bicycle_catagory bc
+		where rn>=#{begin} and de.bicycle_id=t.bicycle_id and de.catagory_id=bc.catagory_id
+	</select>
+	
+	<!-- 查询待入桩车辆的总数 -->
+	<select id="countToPile" resultType="int">
+		select count(bicycle_id) from bicycle_info where status=1
+	</select>
+	
+	<!-- 修改车辆的车桩，状态改为 3：入桩 -->
+	<update id="updateByPile" parameterType="Bicycle_Info">
+		update bicycle_info set pile_id=#{pile_id},status=3 where bicycle_id=#{bicycle_id}
+	</update>
+	
+	<!-- 根据车桩查询车辆 -->
+	<select id="getByPileId" parameterType="int" resultType="Bicycle_Info">
+		select temp.*, bc.catagory_name
+		from bicycle_info temp, bicycle_order_detail de,bicycle_catagory bc
+		where pile_id=#{pile_id} and de.bicycle_id=temp.bicycle_id and de.catagory_id=bc.catagory_id
+	</select>
+	
+</mapper>

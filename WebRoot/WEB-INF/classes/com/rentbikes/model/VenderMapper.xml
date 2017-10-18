@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rentbikes.dao.basicInfo.IVenderDao">
+		
+		<!-- 分页信息查询 -->
+	<select id="getPage" resultType="Vender" parameterType="java.util.Map">
+		<![CDATA[
+			select temp.* from (select rownum rn,v.* from vender v) temp 
+			where rn>=#{start} and rn<=#{end}
+ 		]]>
+	</select>
+	
+	<!-- 查询vender表中的数据条数 -->
+	<select id="getSize" resultType="int">
+		select count(vender_id) from vender
+	</select>
+	
+	
+	<!-- 新增供应商 -->
+	<insert id="registVender" parameterType="com.rentbikes.model.Vender">
+		<!-- <selectKey keyProperty="vender_id" resultType="int" order="BEFORE">
+			select id_vender.nextVal from dual
+		</selectKey> -->
+		<!-- 	create sequence id_vender minvalue 1 maxvalue 99999 start with 10001 increment by 1 nocache; -->
+	<![CDATA[
+		insert into vender values(id_vender.nextVal,#{vender_code},#{vender_type},#{vender_name},#{address},#{telphone},#{contacts},#{product_license},#{bussiness_registration_no},#{registered_capital},#{user_id},#{create_time},#{zxbj},#{remark})
+	
+	 ]]>
+	</insert>
+	
+	<!-- 查询供应商 -->
+	<select id="getVender" parameterType="int" resultType="com.rentbikes.model.Vender">
+		
+		select * from vender where vender_id=#{vender_id}
+	
+	
+	</select>
+	
+	<!-- 修改供应商 -->
+	<update id="modifyVender" parameterType="com.rentbikes.model.Vender">
+		update vender 
+		set
+		vender_code=#{vender_code},
+		vender_type=#{vender_type},
+		vender_name=#{vender_name},
+		address=#{address},
+		telphone=#{telphone},
+		contacts=#{contacts},
+		product_license=#{product_license},
+		bussiness_registration_no=#{bussiness_registration_no},
+		registered_capital=#{registered_capital},
+		user_id=#{user_id},
+		create_time=#{create_time},
+		zxbj=#{zxbj},
+		remark=#{remark}
+		where vender_id=#{vender_id}
+	</update>
+	
+	<!-- 注销供应商 -->
+	<update id="logoutVender" parameterType="int">
+		update vender set zxbj=1 where vender_id=#{id}
+	</update>
+
+	
+	<!-- 获取所有供应商 -->
+	<select id="getAll" resultType="Vender">
+		select v.* from vender v
+	</select>
+
+</mapper>

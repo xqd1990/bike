@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.basicInfo.IBicycle_StationDao">
+	<select id="getFixBSSize" resultType="int">
+		select count(station_id) from bicycle_station
+	</select>
+	<select id="getFixBSPage" resultType="Bicycle_Station" parameterType="java.util.Map">
+		<![CDATA[
+			select temp.station_id,temp.station_code,temp.station_name,temp.address,temp.bicycle_pile_num from (select rownum rn,bs.* from bicycle_station bs order by bs.station_id) temp where temp.rn>=#{start} and temp.rn<=#{end}
+		]]>
+	</select>
+	<select id="getFixBSSearch" resultType="Bicycle_Station" parameterType="Bicycle_Station">
+		
+		select temp.station_id,temp.station_code,temp.station_name,temp.address,temp.bicycle_pile_num 
+		from (select rownum rn,bs.* from bicycle_station bs where 1=1 
+			<if test="station_name != null">
+				and station_name like '%${station_name}%'
+			</if>
+			<if test="address != null">and address like '%${address}%'
+			</if> order by bs.station_id) temp
+		where temp.rn>=#{start} and temp.rn<![CDATA[<=#{end}
+		]]>
+	</select> 
+	<select id="getFixBSSearchSize" parameterType="java.util.Map" resultType="int">
+		select count(station_id) from bicycle_station where 1=1 
+			<if test="station_name != null">
+				and station_name like '%${station_name}%'
+			</if>
+			<if test="address != null">and address like '%${address}%'
+			</if>
+		 
+	</select>
+
+	<!-- 查询所有的车点 -->
+	<select id="getAll" resultType="Bicycle_Station">
+		select temp.* from bicycle_station temp
+	</select>
+	
+	<!-- 查询分页的车点 -->
+	<select id="listStationPage" resultType="Bicycle_Station" parameterType="java.util.Map">
+		select temp.*
+		from (select s.*,rownum rn from (select st.* from bicycle_station st order by station_id) s where rownum<![CDATA[<=]]>#{end}) temp
+		where rn>=#{begin}
+	</select>
+	
+	<!-- 查询车点总数 -->
+	<select id="countAll" resultType="int">
+		select count(station_id) from bicycle_station
+	</select>
+	
+	<!-- 模糊查询车点 -->
+	<select id="listSearchPage" parameterType="java.util.Map" resultType="Bicycle_Station">
+		select temp.*
+		from (select s.*,rownum rn from (select st.* from bicycle_station st order by station_id) s) temp
+		<where>
+			<choose>
+				<when test="station_name != null or address != null">
+					<if test="station_name != null">and station_name like '%${station_name}%'</if>
+					<if test="address != null">and address like '%${address}%'</if>
+				</when>
+				<otherwise>1>3</otherwise>
+			</choose>
+		</where>
+	</select>
+	
+	<!-- 查询符合模糊联合条件的车点数量 -->
+	<select id="countSearch" parameterType="java.util.Map" resultType="int">
+		select count(*)
+		from bicycle_station
+		<where>
+			<choose>
+				<when test="station_name != null or address != null">
+					<if test="station_name != null">station_name like '%${station_name}%'</if>
+					<if test="address != null">and address like '%${address}%'</if>
+				</when>
+				<otherwise>1>3</otherwise>
+			</choose>
+		</where>
+	</select>
+	
+</mapper>

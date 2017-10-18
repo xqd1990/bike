@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.bike.Bicycle_Order_DetailDao">
+	<insert id="addDetail" parameterType="Bicycle_Order_Detail">
+		<selectKey keyProperty="detail_id" resultType="int" order="BEFORE">
+			select detailId.nextval from dual
+		</selectKey>
+		insert into bicycle_order_detail(detail_id,
+                                 		 catagory_id,
+                                		 order_id,
+                                 		 bicycle_id,
+                                         create_date,
+                                 		 batch_no,
+                                   		 price,
+                                 		 remark)
+                                 values(#{detail_id},#{catagory_id},#{order_id},0,
+                                 		#{batch_no},#{batch_no},#{price},#{remark})
+	</insert>
+	
+	<!-- 添加车辆id -->
+	<update id="updateBicycleId" parameterType="Bicycle_Order_Detail">
+		update bicycle_order_detail set bicycle_id=#{bicycle_id} where detail_id=#{detail_id}
+	</update>
+	
+	<!-- 获取指定单据的明细 -->
+	<select id="listByOrderId" parameterType="int" resultType="Bicycle_Order_Detail"> 
+		select temp.detail_id from Bicycle_Order_Detail temp where order_id=#{order_id}
+	</select>
+</mapper>

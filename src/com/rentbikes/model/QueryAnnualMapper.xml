@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.query.IAnnualQueryDao">
+
+
+		<!-- 查询数据库总条数（包括模糊查询） -->
+		<select id="getSize"  parameterType="Bicycle_Info" resultType="int">
+			select count(bicycle_id) from bicycle_info
+			
+			<if test="bicycle_code !=null">
+				where bicycle_code like '%'||#{bicycle_code}||'%'
+			</if>
+		
+		</select>
+
+
+
+
+		<select id="queryAllAnnualBicycle" parameterType="Bicycle_Info" resultType="Bicycle_Info">
+			
+		
+			
+			select temp.*from
+			(select rownum rn,bi.* from bicycle_info bi 
+			<if test="bicycle_code !=null">
+				where bicycle_code like '%'||#{bicycle_code}||'%'
+			</if>
+			
+			)temp
+			
+			<![CDATA[
+			where rn>=#{start} and rn<=#{end}
+			]]>
+			
+			
+			
+		</select>
+		
+	 
+		<select id="queryBIcycleNum"  parameterType="java.util.HashMap" resultType="integer">
+			select count(bicycle_id) 
+			from bicycle_info
+			where
+			 operator_time between
+			 
+			 <choose>
+				 <when test=" month == null"> #{year}||'-01-01 00:00:00'   and  #{year}||'-12-31 23:59:59'</when>
+			  
+				
+				<otherwise>#{year}||'-'||#{month}||'-01 00:00:00'   and  #{year}||'-'||#{month}||'-31 23:59:59'</otherwise>
+				</choose>
+							 
+		
+			  
+			  
+		</select> 
+		
+		
+		<select id="queryRentTime" parameterType="int" resultType="Bicycle_Record">
+		
+		select * from bicycle_record 
+			where bicycle_id=#{bicycle_id}
+		
+		</select>
+		
+		<select id="getUseTime" parameterType="Bicycle_Record" resultType="integer">
+			select round (to_number(TO_DATE(#{return_time},'yyyy-mm-dd hh24:mi:ss')-TO_DATE(#{rent_time},'yyyy-mm-dd hh24:mi:ss'))*24*60) as Hour 
+				from dual 
+		
+		</select>
+		
+		<select id="getBicycleUsetimes" parameterType="Bicycle_Record" resultType="integer">
+			select count(bicycle_id) from bicycle_record where bicycle_id=#{bicycle_id} 
+		
+		</select>
+
+
+		<select id="getBicycleRepairtimes" parameterType="Bicycle_Record" resultType="integer">
+			select count(bicycle_id) from repair_record where bicycle_id=#{bicycle_id}
+		 
+		
+		</select>
+		
+		<select id="getBicycleDeploytimes" parameterType="Bicycle_Record" resultType="integer">
+			select count(bicycle_id) from bicycle_deploy where bicycle_id=#{bicycle_id}
+		</select>
+		
+		<select id="getBicycleAvgUseTime" parameterType="Bicycle_Record" resultType="integer">
+			
+		
+		</select>
+		
+		<select id="getBicycleSumFee" parameterType="Bicycle_Record" resultType="integer">
+			select sum(money) from bicycle_record where bicycle_id=#{bicycle_id}
+		
+		</select>
+		
+		<select id="getBicycleSumRepairFee" parameterType="Bicycle_Record" resultType="integer">
+			select nvl(sum(fee),0) from repair_record where bicycle_id=#{bicycle_id}
+		
+		</select>
+		<select id="getBicycleSumRepairTimes" parameterType="Bicycle_Record" resultType="integer">
+			select count(bicycle_id) from repair_record where bicycle_id=#{bicycle_id}
+		</select>
+		<select id="bicycleAge" parameterType="java.util.HashMap" resultType="integer">
+	
+	
+			select  round
+			(to_number(TO_DATE(#{currenttime},'yyyy-mm-dd hh24:mi:ss')-TO_DATE(#{operatortime},'yyyy-mm-dd hh24:mi:ss'))*24*60) 
+			as Hour  from dual
+	       
+		
+		</select>
+		<select id="getCurrentTime" resultType="String">
+			select to_char(sysdate,'yyyy-MM-dd HH24:mi:ss')  from dual 
+		</select>
+		<select id="getOperatorTime" parameterType="int" resultType="String">
+		select operator_time from bicycle_info where bicycle_id=#{bicycle_id}
+		
+		</select>
+		
+		
+		
+		
+		
+		
+		
+		<select id="getUseFrequencyByYear" parameterType="java.util.HashMap" resultType="integer">
+				select count(record_id) from bicycle_record where rent_time between 
+				 <choose>
+					 <when test=" month == null"> #{year}||'-01-01 00:00:00' and #{year}||'-12-31 23:59:59'</when>
+					<otherwise>#{year}||'-'||#{month}||'-01 00:00:00'   and  #{year}||'-'||#{month}||'-31 23:59:59'</otherwise>
+				</choose>
+							 
+				
+		</select>
+		
+		<select id="getRepairByYear" parameterType="java.util.HashMap" resultType="integer">
+				select nvl(count(record_id),0) from repair_record where operator_time between
+				
+				 <choose>
+					 <when test=" month == null"> #{year}||'-01-01 00:00:00' and #{year}||'-12-31 23:59:59'</when>
+					<otherwise>#{year}||'-'||#{month}||'-01 00:00:00'   and  #{year}||'-'||#{month}||'-31 23:59:59'</otherwise>
+				</choose>
+		</select>
+		
+		<select id="getAvgUseTimeByYear" parameterType="java.util.HashMap" resultType="String">
+		
+			select avg(hour)from
+			(select  round
+			(to_number(TO_DATE(temp2.return_time,'yyyy-mm-dd hh24:mi:ss')-TO_DATE(temp1.rent_time,'yyyy-mm-dd hh24:mi:ss'))*24*60) as Hour 
+	        from 
+	        (select * from bicycle_record where rent_time between        
+	       <choose>
+					 <when test=" month == null"> #{year}||'-01-01 00:00:00' and #{year}||'-12-31 23:59:59'</when>
+					<otherwise>#{year}||'-'||#{month}||'-01 00:00:00'   and  #{year}||'-'||#{month}||'-31 23:59:59'</otherwise>
+		   </choose>	         
+	         )temp1,
+	        (select * from bicycle_record)temp2,       
+	         dual
+	         where temp2.record_id=temp1.record_id)temp3
+
+		</select>
+		
+		<select id="getSumUseTimeByYear" parameterType="java.util.HashMap" resultType="String">
+		
+			select sum(hour)from
+	
+			(select  round
+			(to_number(TO_DATE(temp2.return_time,'yyyy-mm-dd hh24:mi:ss')-TO_DATE(temp1.rent_time,'yyyy-mm-dd hh24:mi:ss'))*24*60) as Hour 
+	        from 
+	        (select * from bicycle_record where rent_time between 
+	         <choose>
+					 <when test=" month == null"> #{year}||'-01-01 00:00:00' and #{year}||'-12-31 23:59:59'</when>
+					<otherwise>#{year}||'-'||#{month}||'-01 00:00:00'   and  #{year}||'-'||#{month}||'-31 23:59:59'</otherwise>
+		   </choose>	        
+	        )temp1,
+	        (select * from bicycle_record)temp2,       
+	         dual
+	         where temp2.record_id=temp1.record_id)temp3
+
+		</select>
+		
+		<select id="getAvgMoneyByYear" parameterType="java.util.HashMap" resultType="String" >
+		
+		select avg(money) from bicycle_record where rent_time between 
+		  <choose>
+					 <when test=" month == null"> #{year}||'-01-01 00:00:00' and #{year}||'-12-31 23:59:59'</when>
+					<otherwise>#{year}||'-'||#{month}||'-01 00:00:00'   and  #{year}||'-'||#{month}||'-31 23:59:59'</otherwise>
+		  </choose>	  
+		</select>
+		
+		<select id="getAvgRepairByYear" parameterType="java.util.HashMap" resultType="String">
+		
+		select nvl(avg(fee),0) from repair_record where operator_time between
+			    <choose>
+							 <when test=" month == null"> #{year}||'-01-01 00:00:00' and #{year}||'-12-31 23:59:59'</when>
+							<otherwise>#{year}||'-'||#{month}||'-01 00:00:00'   and  #{year}||'-'||#{month}||'-31 23:59:59'</otherwise>
+				  </choose>	 
+		
+		</select>
+
+		<select id="getSumMoneyByYear" parameterType="java.util.HashMap" resultType="String">
+			select nvl(sum(money),0) from bicycle_record where rent_time between
+				<choose>
+							 <when test=" month == null"> #{year}||'-01-01 00:00:00' and #{year}||'-12-31 23:59:59'</when>
+							<otherwise>#{year}||'-'||#{month}||'-01 00:00:00'   and  #{year}||'-'||#{month}||'-31 23:59:59'</otherwise>
+				  </choose>	  
+		</select>
+		
+		
+		<select id="getSumRepairByYear" parameterType="java.util.HashMap" resultType="String">
+			select nvl(sum(fee),0) from repair_record where operator_time between
+				<choose>
+							 <when test=" month == null"> #{year}||'-01-01 00:00:00' and #{year}||'-12-31 23:59:59'</when>
+							<otherwise>#{year}||'-'||#{month}||'-01 00:00:00'   and  #{year}||'-'||#{month}||'-31 23:59:59'</otherwise>
+				  </choose>	 
+		
+		
+		</select>
+        
+		
+ 
+
+</mapper>

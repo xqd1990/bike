@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.basicInfo.SYRoleDao">
+	<insert id="addRole" parameterType="SYRole">
+		<selectKey keyProperty="role_id" resultType="int" order="BEFORE">
+			select roleId.nextval from dual
+		</selectKey>
+		insert into syrole(role_id,role_name,role_describe) values(#{role_id},#{role_name},#{role_describe})
+	</insert>
+	<update id="updateRole" parameterType="SYRole">
+		update syrole set role_name=#{role_name},role_describe=#{role_describe} where role_id=#{role_id}
+	</update>
+	<delete id="deleteRole" parameterType="int">
+		delete from syrole where role_id=#{role_id}
+	</delete>
+	
+	
+	<!-- 没有作用就是尝试一下 -->
+	<resultMap id="rolesResult" type="SYRole">
+		<id property="role_id" column="role_id"/>
+		<result property="role_name" column="role_name"/>
+		<result property="role_describe" column="role_describe"/>
+		<collection property="idList" ofType="Integer" >
+			<result property="phaseId" column="phaseId"/>
+		</collection>
+	</resultMap>
+	
+	<select id="getPage" parameterType="java.util.Map" resultMap="rolesResult">
+		<![CDATA[
+		select temp.role_id,temp.role_name,temp.role_describe,s.*
+		from (select rownum rn,ss.* from (select s.* from syrole s order by role_id) ss where rownum<=#{end}) temp left join sypermission s on temp.role_id=s.roleId
+		where rn>=#{start}
+		order by role_id
+		]]>	
+	</select>
+	<select id="getSize" resultType="int">
+		select count(role.role_id) from syrole role
+	</select>
+	
+	<select id="getSearch" parameterType="java.util.Map" resultType="SYRole">
+		<![CDATA[
+		select temp.role_id,temp.role_name,temp.role_describe
+		from (select rownum rn,ss.* from (select s.* from syrole s where role_name like '%${role_name}%' order by role_id) ss where rownum<=#{end}) temp
+		where rn>=#{start}	
+		]]>	
+	</select>
+	<select id="getSearchSize" resultType="int" parameterType="String">
+		select count(role_id) from syrole where role_name like '%'||#{role_name}||'%'
+	</select>
+	
+	<select id="getAll" resultType="SYRole">
+		select * from syrole
+	</select>
+	
+	<select id="getRole_id" parameterType="String" resultType="int">
+		select role_id from syrole where role_name=#{role_name}
+	</select>
+</mapper>

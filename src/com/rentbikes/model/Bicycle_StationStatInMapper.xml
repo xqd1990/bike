@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.query.IBicycle_StationStatInDao">
+	<select id="getStationStatIn" resultType="Bicycle_StationStatIn" parameterType="Bicycle_Station">
+		select bss.*,nvl(bs1.pin,0)/bss.runday pin,nvl(bs2.pout,0)/bss.runday pout,nvl(bs3.rentout,0)/bss.runday rentout,nvl(bs4.rentin,0)/bss.runday rentin from 
+		(select bs.station_id,bs.station_code,bs.station_name,bs.address,bs.bicycle_pile_num,bs.build_time,round(to_number(sysdate-to_date(bs.build_time,'yyyy-MM-dd')))+1 runday from bicycle_station bs where bs.station_id=#{station_id}) bss
+		left join (select bp1.station_id,count(bd1.to_pile_id) pin from bicycle_pile bp1,bicycle_deploy bd1 where bp1.station_id=#{station_id} and bd1.to_pile_id=bp1.pile_id and bd1.to_reason=5 group by bp1.station_id) bs1 on bss.station_id=bs1.station_id
+		left join (select bp2.station_id,count(bd2.from_pile_id) pout from bicycle_pile bp2,bicycle_deploy bd2 where bp2.station_id=#{station_id} and bd2.from_pile_id=bp2.pile_id and bd2.from_reason=4 group by bp2.station_id) bs2 on bs1.station_id=bs2.station_id
+		left join (select bp3.station_id,count(br1.rent_pile_id) rentout from bicycle_pile bp3,bicycle_record br1 where bp3.station_id=#{station_id} and bp3.pile_id=br1.rent_pile_id group by bp3.station_id) bs3 on bs2.station_id=bs3.station_id
+		left join (select bp4.station_id,count(br2.return_pile_id) rentin from bicycle_pile bp4,bicycle_record br2 where bp4.station_id=#{station_id} and bp4.pile_id=br2.rent_pile_id group by bp4.station_id) bs4 on bs3.station_id=bs4.station_id
+	</select>
+</mapper>

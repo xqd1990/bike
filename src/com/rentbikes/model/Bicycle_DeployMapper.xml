@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.bike.IBicycle_DeployDao">
+	<insert id="fixOut" parameterType="Bicycle_Deploy">
+		<selectKey keyProperty="deploy_id" resultType="int" order="BEFORE">
+			select deployid.nextval from dual 
+		</selectKey>
+		insert into bicycle_deploy(deploy_id,bicycle_id,from_pile_id,from_card_id,from_time,from_reason,status) values(#{deploy_id},#{bicycle_id},#{from_pile_id},#{from_card_id},sysdate,6,0)
+	</insert>
+	<update id="fixIn" parameterType="Bicycle_Deploy">
+		update bicycle_deploy set status=1,to_pile_id=#{to_pile_id},to_card_id=#{to_card_id},to_time=sysdate,to_reason=7  where bicycle_id=#{bicycle_id} and status=0
+	</update>
+	
+	<!-- 添加一条调配记录 -->
+	<insert id="addForBicycleToPile" parameterType="Bicycle_Deploy">
+		<selectKey keyProperty="deploy_id" resultType="int" order="BEFORE">
+			select deployId.nextval from dual
+		</selectKey>
+		insert into bicycle_deploy(deploy_id,
+                           bicycle_id,
+                           to_pile_id,
+                           to_time,
+                           to_reason,
+                           status) values(#{deploy_id},#{bicycle_id},#{to_pile_id},#{to_time},1,1)
+	</insert>
+</mapper>

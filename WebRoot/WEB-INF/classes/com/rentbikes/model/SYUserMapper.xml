@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.basicInfo.SYUserDao">
+	<!-- 查询用户列表 -->
+	<select id="listUsers" parameterType="java.util.Map" resultType="SYUser">
+		<![CDATA[
+		select temp.*
+		from (select rownum rn,ss.* from (select s.* from syuser s where zxbj=0 order by user_id) ss where rownum<=#{end}) temp
+		where rn>=#{start} 
+		]]>
+	</select>
+	<!-- 用户总数 -->
+	<select id="countAll" resultType="int">
+		select count(user_id) from syuser where zxbj=0
+	</select>
+	
+	<!-- 查询结果集 -->
+	<select id="listSearch" parameterType="java.util.Map" resultType="SYUser">
+		select temp.*
+		from (select rownum rn,ss.* from (select * 
+										  from syuser 
+										<where>
+											<choose>
+												<when test="login_name == null and username != null">
+													username like '%${username}%' and zxbj=0 
+													<if test="role_id != null">and role_id=#{role_id}</if>
+												</when>
+												<when test="login_name != null and username == null">
+													login_name like '%${login_name}%' and zxbj=0 
+													<if test="role_id != null">and role_id=#{role_id}</if>
+												</when>
+												<when test="login_name == null and username == null">
+													<choose>
+														<when test="role_id == null">1>3</when>
+														<otherwise>role_id=#{role_id} and zxbj=0 </otherwise>
+													</choose>
+												</when>
+											</choose>
+										</where> order by user_id) ss where <![CDATA[rownum<=#{end}]]>) temp
+		where rn>=#{start} 
+		
+	</select>
+	
+	<!-- 查询结果集数量 -->
+	<select id="countSearch" parameterType="java.util.Map" resultType="int">
+		select count(user_id) 
+		from syuser 
+		<where>
+			<choose>
+				<when test="login_name == null and username != null">
+					username like '%${username}%' and zxbj=0 
+					<if test="role_id != null">and role_id=#{role_id}</if>
+				</when>
+				<when test="login_name != null and username == null">
+					login_name like '%${login_name}%' and zxbj=0 
+					<if test="role_id != null">and role_id=#{role_id}</if>
+				</when>
+				<when test="login_name == null and username == null">
+					<choose>
+						<when test="role_id == null">1>3</when>
+						<otherwise>role_id=#{role_id} and zxbj=0</otherwise>
+					</choose>
+				</when>
+			</choose>
+		</where>
+	</select>
+	
+	<!-- 查询是否重复 -->
+	<select id="isExist" parameterType="String" resultType="int">
+		select count(user_id) from syuser where login_name=#{login_name} and zxbj=0
+	</select>
+	
+	<!-- 查询指定角色下是否有用户 -->
+	<select id="haveRole" parameterType="int" resultType="int">
+		select count(user_id) from syuser where role_id=#{role_id}
+	</select>
+	
+	<!-- 添加用户 -->
+	<insert id="addUser" parameterType="SYUser" >
+		<selectKey keyProperty="user_id" resultType="int" order="BEFORE">
+			select userId.nextval from dual
+		</selectKey>
+		insert into syuser(user_id,
+                   role_id,
+                   login_name,
+                   username,
+                   password,
+                   active_flag,
+                   zxbj,
+                   office_phone,
+                   mobile_phone,
+                   email) values(#{user_id},#{role_id},#{login_name},#{username},#{password},1,0,#{office_phone},#{mobile_phone},#{email})
+	</insert>
+	
+	<!-- 修改用户 -->
+	<update id="updateUser" parameterType="SYUser">
+		update syuser set role_id=#{role_id}, login_name=#{login_name},
+                   		  username=#{username}, password=#{password}, active_flag=#{active_flag},
+                  		  office_phone=#{office_phone},mobile_phone=#{mobile_phone},email=#{email} where user_id=#{user_id}
+	</update>
+	
+	<!-- 注销用户 -->
+	<update id="removeUser" parameterType="int">
+		update syuser set zxbj=1 where user_id=#{user_id}
+	</update>
+	
+	<!-- 查询所有的购入管理员和管理员 -->
+	<select id="listAdminAndBuyer" resultType="SYUser">
+		select u.* from syuser u where (role_id=1 or role_id=2) and zxbj=0 
+	</select>
+	
+	<!-- 根据用户名和密码查询用户 -->
+	<select id="getForLogin" parameterType="SYUser" resultType="SYUser">
+		select s.* from syuser s where login_name=#{login_name} and password=#{password} and zxbj=0
+	</select>
+</mapper>

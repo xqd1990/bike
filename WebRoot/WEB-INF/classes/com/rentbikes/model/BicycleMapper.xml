@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rentbikes.dao.basicInfo.IBicycleDao">
+
+		<!-- 查询vender表中的数据条数 -->
+		<select id="getSize" resultType="int">
+			select count(station_id) from bicycle_station
+		</select>
+
+	 	<select id="queryStation" parameterType="java.util.HashMap" resultType="Bicycle_Station">
+		
+		select temp.* 
+		from (select rownum rn,bs.* from bicycle_station bs where 1=1
+		
+		<if test="station_code != null">
+			and station_code like '%'||#{station_code}||'%'
+		</if>
+		
+		<if test="station_name != null">
+			and station_name like '%'||#{station_name}||'%'
+		</if>
+		
+		<if test="person_in_charge != null">
+			and person_in_charge like '%'||#{person_in_charge}||'%'
+		</if>
+		
+		<if test="address != null">
+			and address like '%'||#{address}||'%'
+		</if>
+		) temp 
+		 <![CDATA[
+		where temp.rn>=#{start} and temp.rn<=#{end}
+		
+		]]> 
+		
+	<!-- 	select * from bicycle_station where 1=1
+		
+		<if test="station_code != null">
+			and station_code like '%'||#{station_code}||'%'
+		</if>
+		
+		<if test="station_name != null">
+			and station_name like '%'||#{station_name}||'%'
+		</if>
+		
+		<if test="person_in_charge != null">
+			and person_in_charge like '%'||#{person_in_charge}||'%'
+		</if>
+		
+		<if test="address != null">
+			and address like '%'||#{address}||'%'
+		</if>  -->
+	</select>
+	
+		
+	<select id="queryAllPile" parameterType="int" resultType="Bicycle_Pile">
+		select * from bicycle_pile where station_id=#{id}
+	
+	
+	</select>
+	
+	
+	
+	
+	
+	<insert id="registStation" parameterType="Bicycle_Station">
+		<selectKey keyProperty="id_station" resultType="int" order="BEFORE">
+		<!-- create sequence id_station minvalue 1 maxvalue 99999 start with 10001 increment by 1 nocache; -->
+			select id_station.nextVal from dual
+		</selectKey> -->
+			
+	<![CDATA[
+			insert into Bicycle_Station values(id_station.nextVal,#{station_code},#{station_name},#{longitude},#{latitude},#{bicycle_pile_num},#{address},#{person_in_charge},#{build_time},#{run_time},#{user_id},#{create_time},#{remark},#{zxbj})
+	 ]]>
+	
+	</insert>
+	
+	<insert id="registPile" parameterType="Bicycle_Pile">
+		<selectKey keyProperty="id_pile" resultType="int" order="BEFORE">
+			select id_pile.nextVal from dual
+		</selectKey>
+		
+		insert into bicycle_pile values(id_pile.nextVal,#{vender_id},#{pile_code},#{station_id},#{status},#{install_time},#{disassembly_time},#{user_id},#{operator_time},#{bicycle_id},#{remark})
+	
+	
+	
+	</insert>
+	
+	<update id="bicycle_stationModify" parameterType="Bicycle_Station">
+		update bicycle_station
+		set 
+			 station_code =#{station_code}
+	
+		
+		<if test="station_name != null">
+			, station_name =#{station_name}
+		</if>
+		
+		<if test="longitude != null">
+			, longitude =#{longitude}
+		</if>
+		
+		<if test="latitude != null">
+			, latitude =#{latitude}
+		</if>
+		
+		<if test="bicycle_pile_num != null">
+			, bicycle_pile_num =#{bicycle_pile_num}
+		</if>
+		
+		<if test="address != null">
+			, address =#{address}
+		</if>
+		
+		<if test="person_in_charge != null">
+			, person_in_charge =#{person_in_charge}
+		</if>
+		
+		<if test="build_time != null">
+			, build_time =#{build_time}
+		</if>
+		
+		<if test="run_time != null">
+			, run_time =#{run_time}
+		</if>
+		
+		<if test="user_id != null">
+			, user_id =#{user_id}
+		</if>
+		
+		<if test="create_time != null">
+			, create_time =#{create_time}
+		</if>
+		
+		<if test="zxbj != null">
+			, zxbj =#{zxbj}
+		</if>
+		
+		<if test="remark != null">
+			, remark =#{remark}
+		</if>
+		
+		where station_id=#{station_id}
+		
+	</update>
+	
+	<update id="bicycle_pileModify" parameterType="Bicycle_Pile">
+		
+		update bicycle_pile 
+		
+		set 
+			 vender_id =#{vender_id}
+			
+			<if test="pile_code !=null">
+				, pile_code=#{pile_code}
+			</if> 
+			
+			<if test="station_id !=null">
+				, station_id=#{station_id}
+			</if> 
+			
+			<if test="status !=null">
+				, status=#{status}
+			</if> 
+			
+			<if test="install_time !=null">
+				, install_time=#{install_time}
+			</if> 
+			
+			<if test="disassembly_time !=null">
+				, disassembly_time=#{disassembly_time}
+			</if> 
+			
+			<if test="user_id !=null">
+				, user_id=#{user_id}
+			</if> 
+			
+			<if test="operator_time !=null">
+				, operator_time=#{operator_time}
+			</if> 
+			
+			<if test="bicycle_id !=null">
+				, bicycle_id=#{bicycle_id}
+			</if> 
+			
+	
+			
+			<if test="remark !=null">
+				, remark=#{remark}
+			</if> 
+			
+			where pile_id=#{pile_id}
+			
+	
+	</update>
+	
+	
+	<!-- 执行注销车点 -->
+	<update id="bicycle_stationLogout" parameterType="int">
+			update bicycle_station
+			set
+			zxbj=1
+			where station_id=#{station_id}
+	</update>
+	
+	
+	<!-- 查询车点的车桩上是否存放有自行车辆 -->
+	<!-- 1.查询出指定station_id的车点的所有车桩的数量 -->
+	<!-- 2.查询出指定station_id的车点的、满足状态是2的（无车）所有车桩的数量 -->
+	<!-- 3.如果两个数量相等，则说明都是没有车的，返回int类型。如果车桩的状态不全是2，则返回空 -->
+	<select id="bicycle_stationIsEmpty" parameterType="int" resultType="integer">
+		select temp1.empty_bicycle_number from
+			(select count(pile_id) sum_bicycle_number from bicycle_pile where station_id=#{station_id})temp2,
+			(select count(pile_id) empty_bicycle_number from bicycle_pile where station_id=#{station_id} and status=2)temp1
+			where temp1.empty_bicycle_number=temp2.sum_bicycle_number
+	</select>
+	
+	
+	
+
+
+
+</mapper>

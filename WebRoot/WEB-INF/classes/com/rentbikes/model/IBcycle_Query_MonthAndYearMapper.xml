@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.query.IBcycle_Query_MonthAndYearDao">
+		<select id="getAllDeposit" parameterType="Card_Record" resultType="String" >
+		<![CDATA[
+		select sum(temp.SM) inFee from
+ 			(select sum(cr.chg_wallet_money) SM from card_record cr
+ 				 where cr.fee_type=2  and cr.chg_wallet_money>0 and cr.create_time like  #{create_time}||'%' 
+		UNION 
+		 	select sum(c.chg_monthly_money) SM from card_record c
+ 				 where c.fee_type=1 and c.chg_monthly_money>0 and c.create_time like #{create_time}||'%') temp
+		]]>
+		</select>
+		
+		<select id="getACardDeposit" parameterType="Card_Record" resultType="String">
+			<![CDATA[
+			select sum(temp.SM) inFee from
+    			(select sum(cr.chg_wallet_money) SM from card_record cr left join card cl on cr.card_id=cl.card_id
+     				where cr.fee_type=2 and (cl.card_type=1 or cl.card_type=3) and cr.chg_wallet_money>0 and cr.create_time like  #{create_time}||'%' 
+     		UNION 
+     			select sum(c.chg_monthly_money) SM from card_record c
+      				where c.fee_type=1 and c.chg_monthly_money>0  and c.create_time like #{create_time}||'%') temp
+		]]>
+		</select>
+		
+		
+		<select id="getOneCardDeposit" parameterType="Card_Record" resultType="String">
+				<![CDATA[
+			select sum(temp.SM) inFee from
+    			(select sum(cr.chg_wallet_money) SM from card_record cr 
+     				where cr.fee_type=2 and cr.card_id=#{card_id} and cr.chg_wallet_money>0 and cr.create_time like  #{create_time}||'%' 
+     		UNION 
+     			select sum(c.chg_monthly_money) SM from card_record c
+      				where c.fee_type=1 and c.chg_monthly_money>0 and c.card_id=#{card_id} and c.create_time like #{create_time}||'%') temp
+		]]>
+		</select>
+		
+		<select id="getAllUseFee" parameterType="Card_Record" resultType="String">
+			select sum(bd.chg_money)  from BICYCLE_DEAL bd where bd.deal_type=3 and bd.create_time like #{create_time}||'%'    
+		</select>
+		<select id="getAllACardUseFee" parameterType="Card_Record" resultType="String">
+			select sum(bd.chg_money)  from BICYCLE_DEAL bd left join card c on bd.card_id=c.card_id where bd.deal_type=3 and (c.card_type=1 or c.card_type=3 )and bd.create_time like #{create_time}||'%' 
+		</select>
+		<select id="getOneCardUseFee" parameterType="Card_Record" resultType="String">
+			select sum(bd.chg_money)  from BICYCLE_DEAL bd  where bd.deal_type=3 and bd.card_id=#{card_id} and bd.create_time like #{create_time}||'%' 
+		</select>
+		<select id="getRecordnum" parameterType="Card_Record" resultType="String">
+			select count(*) from BICYCLE_RECORD br where br.rent_time like #{create_time}||'%'
+		</select>
+		<select id="getACardRecordnum" parameterType="Card_Record" resultType="String">
+			      select count(*) from BICYCLE_RECORD br left join card c on c.card_id=br.card_id where (c.card_type=1 or c.card_type=3) and br.rent_time like  #{create_time}||'%' 
+		</select>
+		<select id="getOneRecordnum" parameterType="Card_Record" resultType="String">
+			select count(*) from BICYCLE_RECORD br left join card c on c.card_id=br.card_id where br.card_id=#{card_id} and br.rent_time like  #{create_time}||'%' 
+		</select>
+		<select id="getRecordTime" parameterType="Card_Record" resultType="String">
+			select  SUM(ROUND(TO_NUMBER(to_date(br.return_time,'yyyy-mm-dd hh24:mi:ss')-to_date(br.rent_time,'yyyy-mm-dd hh24:mi:ss'))*24)) from BICYCLE_RECORD br where br.rent_time like #{create_time}||'%'
+		</select>
+		<select id="getACardRecordTime" parameterType="Card_Record" resultType="String">
+			  select  SUM(ROUND(TO_NUMBER(to_date(br.return_time,'yyyy-mm-dd hh24:mi:ss')-to_date(br.rent_time,'yyyy-mm-dd hh24:mi:ss'))*24)) from BICYCLE_RECORD br left join card c on br.card_id=c.card_id where  (c.card_type=1 or c.card_type=3) and br.rent_time like #{create_time}||'%'
+		</select>
+		<select id="getOneRecordTime" parameterType="Card_Record" resultType="String">
+			  select  SUM(ROUND(TO_NUMBER(to_date(br.return_time,'yyyy-mm-dd hh24:mi:ss')-to_date(br.rent_time,'yyyy-mm-dd hh24:mi:ss'))*24)) from BICYCLE_RECORD br  where  br.card_id=#{card_id} and br.rent_time like #{create_time}||'%'
+		</select>
+		
+</mapper>

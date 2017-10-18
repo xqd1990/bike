@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.bike.Bicycle_OrderDao">
+	<!-- 添加一条订单  -->
+	<insert id="addOrder" parameterType="Bicycle_Order">
+		<selectKey keyProperty="order_id"  resultType="int" order="BEFORE">
+			select orderId.nextval from dual
+		</selectKey>
+		insert into bicycle_order(order_id,
+                          order_code,
+                          vender_id,
+                          buy_date,
+                          buy_num,
+                          buy_price,
+                          person_in_charge,
+                          invoice_no,
+                          user_id,
+                          operator_time,
+                          remark,
+                          status) 
+                     values(#{order_id},#{order_code},#{vender_id},#{buy_date},#{buy_num},#{buy_price},#{person_in_charge},#{invoice_no},
+                     		#{user_id},#{operator_time},#{remark},1)
+	</insert>
+
+	<!-- 获取状态为录入的订单 -->
+	<select id="listUnSure" resultType="Bicycle_Order">
+		select bo.* from bicycle_order bo where status=1 order by order_code
+	</select>
+	
+	<!-- 修改单据状态为确认 -->
+	<update id="updateStatus" parameterType="Bicycle_Order">
+		update bicycle_order set status=2 where order_id=#{order_id}
+	</update>
+</mapper>

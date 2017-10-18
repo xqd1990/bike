@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:context="http://www.springframework.org/schema/context"
+ xmlns:mvc="http://www.springframework.org/schema/mvc"
+ xmlns:tx="http://www.springframework.org/schema/tx"
+ xsi:schemaLocation="http://www.springframework.org/schema/beans
+ http://www.springframework.org/schema/beans/spring-beans.xsd
+ http://www.springframework.org/schema/context
+ http://www.springframework.org/schema/context/spring-context.xsd
+ http://www.springframework.org/schema/mvc
+ http://www.springframework.org/schema/mvc/spring-mvc.xsd
+ http://www.springframework.org/schema/tx
+ http://www.springframework.org/schema/tx/spring-tx.xsd">
+ 
+ 
+ 	<mvc:annotation-driven/>
+ 	<context:component-scan base-package="com.rentbikes.controller.basicInfo.orgInfo"></context:component-scan>
+ 	<context:component-scan base-package="com.rentbikes.controller.basicInfo.businessInfo"></context:component-scan>
+ 	<context:component-scan base-package="com.rentbikes.controller.basicInfo.bikeInfo"></context:component-scan>
+ 	<context:component-scan base-package="com.rentbikes.controller.bike.rent"></context:component-scan>
+ 	<context:component-scan base-package="com.rentbikes.controller.bike.fix"></context:component-scan>
+ 	<context:component-scan base-package="com.rentbikes.controller.bike.dispatch"></context:component-scan>
+ 	<context:component-scan base-package="com.rentbikes.controller.bike.init"></context:component-scan>
+ 	<context:component-scan base-package="com.rentbikes.controller.card"></context:component-scan>
+ 	<context:component-scan base-package="com.rentbikes.controller.query"></context:component-scan>
+ 	
+ 	<context:component-scan base-package="com.rentbikes.serviceImp.basicInfo"></context:component-scan>
+ 	<context:component-scan base-package="com.rentbikes.serviceImp.bike"></context:component-scan>
+ 	<context:component-scan base-package="com.rentbikes.serviceImp.card"></context:component-scan>
+ 	<context:component-scan base-package="com.rentbikes.serviceImp.query"></context:component-scan>
+ 	
+ 
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location" value="classpath:jdbc.properties"></property>
+	</bean>
+ 	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+ 		<property name="driverClassName" value="${driver}"></property>
+ 		<property name="url" value="${url}"></property>
+ 		<property name="username" value="${username}"></property>
+ 		<property name="password" value="${password}"></property>
+ 		<property name="maxActive" value="${maxActive}"></property>
+ 		<property name="minIdle" value="${minIdle}"></property>
+ 	</bean>
+ 	
+ 	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+ 		<property name="typeAliasesPackage" value="com.rentbikes.model"></property>
+ 		<property name="dataSource" ref="dataSource"></property>
+ 		<property name="mapperLocations" value="classpath:com/rentbikes/model/*Mapper.xml"></property>
+ 	</bean>
+ 	
+ 	<bean id="SYUserDao" class="org.mybatis.spring.mapper.MapperFactoryBean">
+ 		<property name="sqlSessionFactory" ref="sqlSessionFactory"></property>
+ 		<property name="mapperInterface" value="com.rentbikes.dao.basicInfo.SYUserDao"></property>
+ 	</bean>
+ 	<bean id="MSPhaseDao" class="org.mybatis.spring.mapper.MapperFactoryBean">
+ 		<property name="sqlSessionFactory" ref="sqlSessionFactory"></property>
+ 		<property name="mapperInterface" value="com.rentbikes.dao.basicInfo.MSPhaseDao"></property>
+ 	</bean>
+ 	
+ 	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+ 		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"></property>
+ 		<property name="basePackage" value="com.rentbikes.dao.basicInfo, com.rentbikes.dao.bike, com.rentbikes.dao.card, com.rentbikes.dao.query"></property>
+ 	</bean>
+ 	
+ 	
+ 	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+ 		<property name="dataSource" ref="dataSource"></property>
+ 	</bean>
+ 	
+ 	<tx:annotation-driven transaction-manager="transactionManager"/>	
+ 	
+ 
+ 
+ 
+ </beans>

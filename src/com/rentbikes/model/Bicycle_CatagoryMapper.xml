@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.basicInfo.IBicycle_CatagoryDao">
+	<select	id="getBCPage" resultType="Bicycle_Catagory">
+		select * from bicycle_catagory order by catagory_id
+	</select>
+	<insert	id="addBC" parameterType="Bicycle_Catagory">
+		<selectKey keyProperty="catagory_id" resultType="int" order="BEFORE">
+			select catagoryid.nextval from dual 
+		</selectKey>
+		insert into bicycle_catagory(catagory_id,catagory_name,frame_type,tire_type,weight,height,length,ring_type,basket,bicycle_seat,handbrake,remark,user_id,operator_time,backseat) 
+		values(#{catagory_id},#{catagory_name},#{frame_type},#{tire_type},#{weight},#{height},#{length},#{ring_type},#{basket},#{bicycle_seat},#{handbrake},#{remark},#{user_id},sysdate,#{backseat})
+	</insert>
+	<delete id="deleteBC" parameterType="Bicycle_Catagory">
+		delete from bicycle_catagory where catagory_id=#{catagory_id}
+	</delete>
+	<select id="queryBC" parameterType="Bicycle_Catagory" resultType="Bicycle_Order_Detail">
+		select * from bicycle_order_detail where catagory_id=#{catagory_id}
+	</select>
+	<update id="updateBC" parameterType="Bicycle_Catagory">
+		update bicycle_catagory bc set bc.catagory_name=#{catagory_name},bc.frame_type=#{frame_type},bc.tire_type=#{tire_type},bc.weight=#{weight} ,bc.height=#{height},bc.length=#{length},bc.ring_type=#{ring_type},bc.basket=#{basket},bc.backseat=#{backseat},bc.bicycle_seat=#{bicycle_seat},bc.handbrake=#{handbrake},bc.remark=#{remark},bc.user_id=#{user_id},bc.operator_time=sysdate where bc.catagory_id=#{catagory_id}
+	</update>
+	
+	<!-- 获得所有的车辆信息 -->
+	<select id="getAll" resultType="Bicycle_Catagory">
+		select temp.* from bicycle_catagory temp 
+	</select>
+</mapper>

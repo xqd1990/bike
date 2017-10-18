@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rentbikes.dao.basicInfo.RegisterCardDao">
+	<select id="qureyCardmsg" parameterType="Card" resultType="Card">
+	
+		select * from card c where 
+		<choose>
+			<when test="card_code !=null">
+				card_code like #{card_code}||'%'
+			</when>
+			<when test="card_code == null and name !=null and idcard != null">
+				name like #{name}||'%' or idcard like #{idcard}||'%'
+			</when>
+			<when test="card_code == null and name !=null and idcard == null">
+				name like #{name}||'%' 
+			</when>
+			<when test="card_code == null and name ==null and idcard != null">
+				idcard like #{idcard}||'%'
+			</when>
+		</choose>
+			 order by c.card_id
+	</select>
+
+	<select id="showOneCard" parameterType="Card" resultType="Card">	
+	    select * from CARD c where c.idcard=#{idcard} and c.card_type=#{card_type}	
+	</select>
+	<select id="getpagenum" resultType="int">
+		select count(*) from card 
+	</select>
+	
+	<insert id="registerCard" parameterType="Card" >
+		 <selectKey keyProperty="card_id" resultType="int" order="BEFORE">
+			select CARDIDSEQ.nextval from dual
+		</selectKey> 		
+		<!--
+		<selectKey keyProperty="card_code" resultType="int" order="BEFORE">
+			select CARDCODESEQ.nextval from dual
+		</selectKey> -->
+		insert into CARD values(
+		#{card_id},
+		<if test="card_type == 3">
+		#{idcard}
+		</if>
+		<if test="card_type != 3">
+		(select max(card_id)+1000001 from card)
+		</if>
+		,#{card_type},#{name},#{idcard},#{sex},#{telphone},#{mobile},#{email},#{address},#{work},#{zxbj},#{monthly_money},#{frozen_money},#{wallet_money},#{status})
+	</insert>
+	
+	<select id="allCard" resultType="Card" parameterType="java.util.Map">
+	<![CDATA[
+			select cd1.card_id,cd1.card_code,cd1.card_type,cd1.name,cd1.idcard,cd1.sex,cd1.telphone,cd1.mobile,cd1.email,cd1.address,cd1.work,cd1.zxbj,cd1.monthly_money,cd1.frozen_money,cd1.wallet_money,cd1.status
+			from (select cd.*,rownum rn from CARD cd order by cd.card_id) cd1 where cd1.rn>=#{start1} and cd1.rn<#{end}
+	]]>
+	</select>
+	
+	<update id="updateCard"  parameterType="Card">
+		update card c 
+		set c.card_type=#{card_type},c.card_code=#{card_code},c.name=#{name},c.idcard=#{idcard},c.sex=#{sex},c.telphone=#{telphone},c.mobile=#{mobile},c.email=#{email},c.address=#{email},c.work=#{work},c.monthly_money=#{monthly_money},c.frozen_money=#{frozen_money},c.wallet_money=#{wallet_money} 
+		where c.card_id=#{card_id}
+	</update>
+	
+	<select id="getuserid" resultType="SYUser" parameterType="SYUser">
+		select * from SYUSER where USERNAME=#{username}
+	</select>
+	
+	<insert id="insertCIRofup" parameterType="Card_Info_Record">
+	<selectKey keyProperty="record_id" resultType="int" order="BEFORE">
+			select card_info_recordseq.nextval from dual
+	</selectKey>
+		insert into CARD_INFO_RECORD values(#{record_id},#{card_id},1,to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'),#{user_id},'卡用户信息更改')
+	</insert>
+	
+	<insert id="insertCIR" parameterType="Card_Info_Record">
+	<selectKey keyProperty="record_id" resultType="int" order="BEFORE">
+			select card_info_recordseq.nextval from dual
+	</selectKey>
+		insert into CARD_INFO_RECORD values(#{record_id},#{card_id},1,to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'),#{user_id},'新用户')
+	</insert>
+	
+	<insert id="insertCIRlgoc" parameterType="Card_Info_Record">
+			<selectKey keyProperty="record_id" resultType="int" order="BEFORE">
+				select card_info_recordseq.nextval from dual
+			</selectKey>
+			insert into CARD_INFO_RECORD values(#{record_id},#{card_id},3,to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'),#{user_id},'注销')
+	</insert>
+	<insert id="insertCRlgoc" parameterType="Card_Record">
+			<selectKey keyProperty="record_id" resultType="int" order="BEFORE">
+				select card_recordseq.nextval from dual
+			</selectKey>
+			insert into CARD_RECORD values(#{record_id},#{card_id},6,#{chg_monthly_money},#{chg_wallet_money},#{frozen_money},to_char(sysdate,'yyyy-mm-dd hh24:mi:ss'),#{user_id},'注销',1)
+	</insert>
+	<update id="upcardlgoc" parameterType="Card">
+		update card c 
+		set c.monthly_money=0,c.frozen_money=0,c.wallet_money=0,zxbj=1 
+		where c.card_id=#{card_id}
+	</update>
+	<update id="losscard" parameterType="Card">
+		update card c 
+		set c.status=2 where c.card_id=#{card_id}
+	</update>
+</mapper>
